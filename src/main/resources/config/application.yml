@@ -4,7 +4,7 @@
 server:
   port: 8888
   servlet:
-    context-path: /
+    context-path: /api
   tomcat:
     max-threads: 1000
     min-spare-threads: 30
@@ -51,38 +51,40 @@ spring-boot-plus:
   enable-verify-code: false
   # 实现BaseEnum接口的枚举包
   enum-packages: io.geekidea.springbootplus.enums
-  # 过滤器配置
+  swagger-paths: /swagger-ui.html,/swagger-resources/**,/webjars/springfox-swagger-ui/**,/v2/api-docs,/csrf
+  # 拦截器配置
+  interceptor:
+    permission:
+      enable: false
+      include-paths: /**
+      exclude-paths: ${spring-boot-plus.swagger-paths},/adminLogin,/sysLogin,/login.html,/verificationCode,/doc/**,/error/**,/docs,/resource/**
+    resource:
+      enable: false
+      include-paths: ${spring-boot-plus.resource-access-patterns}
+    upload:
+      enable: false
+      include-paths: /upload/**
+    download:
+      enable: false
+      include-paths: /download/**
+
+  # 请求路径过滤器配置
   filter:
     # 请求路径Filter配置
     request-path:
-      enabled: true
+      enable: true
       include-paths: /**
       # 排除路径，多行字符串配置
       exclude-paths: |
         /applications/**,/actuator/**,/instances/**,/logfile,/sba-settings.js,/assets/img/favicon.png,
         /swagger-ui.html,/swagger-resources/**,/webjars/springfox-swagger-ui/**,/v2/api-docs,
         /druid/**,/favicon.ico
-  # 拦截器配置
-  interceptor:
-    permission:
-      enabled: false
-      include-paths: /**
-      exclude-paths: /swagger-resources/**,/api-docs/**,/v2/api-docs/**,/adminLogin,/sysLogin,/login.html,/verificationCode,/doc/**,/error/**,/docs,/resource/**
-    resource:
-      enabled: true
-      include-paths: ${spring-boot-plus.resource-access-patterns}
-    upload:
-      enabled: true
-      include-paths: /upload/**
-    download:
-      enabled: true
-      include-paths: /download/**
 
   # AOP配置
   aop:
     log:
       # 是否启用
-      enabled: true
+      enable: true
       # 1.请求和响应分开，按照执行顺序打印
       # 2.ThreadLocal线程绑定，方法执行结束时，连续打印请求和响应日志
       # 3.ThreadLocal线程绑定，方法执行结束时，同时打印请求和响应日志
@@ -115,7 +117,7 @@ spring-boot-plus:
     # 允许访问的源
     allowed-origins: '*'
     # 允许访问的请求头
-    allowed-headers: x-requested-with,content-type,token
+    allowed-headers: '*'
     # 是否允许发送cookie
     allow-credentials: true
     # 允许访问的请求方式
@@ -145,14 +147,16 @@ spring-boot-plus:
       /=anon
       /static/**=anon
       /templates/**=anon
-      /druid/**=anon
       /hello/world=anon
-      /sysLog/**=anon
       /verificationCode/**=anon
       /resource/**=anon
       /fooBar/**=anon
       /index=anon
       /enum=anon
+      /docs=anon
+      /getSysUserInfo=anon
+      /upload/**=anon
+      /test/**=anon
     # 权限配置
     permission:
         # 排除登陆登出相关
@@ -162,13 +166,10 @@ spring-boot-plus:
       - urls: /static/**,/templates/**
         permission: anon
         # 排除Swagger
-      - urls: /docs,/swagger-ui.html,/webjars/springfox-swagger-ui/**,/swagger-resources/**,/v2/api-docs
+      - urls: ${spring-boot-plus.swagger-paths}
         permission: anon
         # 排除SpringBootAdmin
       - urls: /,/favicon.ico,/actuator/**,/instances/**,/assets/**,/sba-settings.js,/applications/**
-        permission: anon
-        # 测试
-      - url: /sysUser/getPageList
         permission: anon
   ######################## Spring Shiro end ##########################
 
@@ -183,7 +184,7 @@ spring-boot-plus:
     # 观众
     audience: web
     # 默认过期时间1小时，单位：秒
-    expire-second: 3600
+    expire-second: 36000
     # 是否刷新token
     refresh-token: true
     # 刷新token的时间间隔，默认10分钟，单位：秒
@@ -203,6 +204,8 @@ spring-boot-plus:
 mybatis-plus:
   # 启动时是否检查MyBatis XML文件是否存在
   check-config-location: true
+  # 支持统配符 * 或者 ; 分割
+  typeEnumsPackage: io.geekidea.springbootplus.*.enums
   # MyBatis原生配置
   configuration:
     # 字段名称下划线转驼峰命名
@@ -210,7 +213,7 @@ mybatis-plus:
   global-config:
     db-config:
       # 全局默认主键类型
-      id-type: id_worker
+      id-type: input
       # 逻辑已删除值(默认为 1)
       logic-delete-value: 1
       # 逻辑未删除值(默认为 0)
@@ -220,45 +223,29 @@ mybatis-plus:
 ################################ mybatis-plus end ##################################
 
 
-############################### DRUID数据源配置 start ################################
+############################### HikariCP 数据源配置 start ################################
 ---
 spring:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    druid:
-      filter:
-        slf4j:
-          enabled: true
-        stat:
-          log-slow-sql: true
-          merge-sql: true
-          slow-sql-millis: 3000
-        wall:
-          config:
-            delete-allow: true
-            drop-table-allow: false
-          enabled: true
-      filters: stat,wall,slf4j
-      initial-size: 10
-      max-active: 100
-      max-pool-prepared-statement-per-connection-size: 20
-      max-wait: 60000
-      min-evictable-idle-time-millis: 300000
-      min-idle: 10
-      pool-prepared-statements: true
-      stat-view-servlet:
-        enabled: true
-        login-password: druid123
-        login-username: druid
-        url-pattern: /druid/*
-      test-on-borrow: false
-      test-on-return: false
-      test-while-idle: true
-      time-between-eviction-runs-millis: 60000
-      validation-query: SELECT 1
-      validation-query-timeout: 60000
-    type: com.alibaba.druid.pool.DruidDataSource
-############################### DRUID数据源配置 end ################################
+    type: com.zaxxer.hikari.HikariDataSource
+    cachePrepStmts: true
+    prepStmtCacheSize: 300
+    prepStmtCacheSqlLimit: 2048
+    useServerPrepStmts: true
+    useLocalSessionState: true
+    rewriteBatchedStatements: true
+    cacheResultSetMetadata: true
+    cacheServerConfiguration: true
+    elideSetAutoCommits: true
+    maintainTimeStats: false
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 20
+      idle-timeout: 10000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+############################### HikariCP 数据源配置 end ################################
 
 
 ############################### Redis 公共配置 start ###############################
@@ -277,18 +264,21 @@ spring:
 
 
 #################################### Swagger start #################################
+spring-boot-plus:
+  swagger:
+    enable: true
 # swagger配置
 swagger:
   base:
-    package: io.geekidea.springbootplus
+    package: io.geekidea.springbootplus;com.example
   contact:
     email: geekidea@qq.com
     name: geekidea
     url: ''
   description: ''
-  title: spring-boot-plus
+  title: ${pom.artifactId}
   url: ''
-  version: 1.0
+  version: ${pom.version}
 #################################### Swagger end ###################################
 
 

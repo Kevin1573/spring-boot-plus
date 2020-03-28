@@ -20,21 +20,26 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.geekidea.springbootplus.common.exception.BusinessException;
-import io.geekidea.springbootplus.common.service.impl.BaseServiceImpl;
-import io.geekidea.springbootplus.common.vo.Paging;
-import io.geekidea.springbootplus.enums.StateEnum;
-import io.geekidea.springbootplus.shiro.util.SaltUtil;
+import io.geekidea.springbootplus.framework.common.exception.BusinessException;
+import io.geekidea.springbootplus.framework.pagination.PageUtil;
+import io.geekidea.springbootplus.framework.common.service.impl.BaseServiceImpl;
+import io.geekidea.springbootplus.framework.pagination.Paging;
+import io.geekidea.springbootplus.system.enums.StateEnum;
+import io.geekidea.springbootplus.framework.shiro.util.SaltUtil;
+import io.geekidea.springbootplus.framework.util.PhoneUtil;
 import io.geekidea.springbootplus.system.entity.SysUser;
 import io.geekidea.springbootplus.system.mapper.SysUserMapper;
-import io.geekidea.springbootplus.system.param.SysUserQueryParam;
-import io.geekidea.springbootplus.system.param.UpdatePasswordParam;
+import io.geekidea.springbootplus.system.param.sysuser.ResetPasswordParam;
+import io.geekidea.springbootplus.system.param.sysuser.SysUserPageParam;
+import io.geekidea.springbootplus.system.param.sysuser.UpdatePasswordParam;
 import io.geekidea.springbootplus.system.service.SysDepartmentService;
 import io.geekidea.springbootplus.system.service.SysRoleService;
 import io.geekidea.springbootplus.system.service.SysUserService;
 import io.geekidea.springbootplus.system.vo.SysUserQueryVo;
-import io.geekidea.springbootplus.util.PasswordUtil;
+import io.geekidea.springbootplus.framework.util.PasswordUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -82,8 +87,20 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         sysUser.setId(null);
 
         // 密码加密
-        String newPassword = PasswordUtil.encrypt(sysUser.getPassword(), salt);
-        sysUser.setPassword(newPassword);
+        String password = sysUser.getPassword();
+        String encryptPassword = null;
+        // 如果密码为空，则设置默认密码
+        if (StringUtils.isBlank(password)) {
+            // TODO 提取初始密码到配置文件
+            encryptPassword = "11a254dab80d52bc4a347e030e54d861a9d2cdb2af2185a9ca4a7318e830d04d";
+        } else {
+            encryptPassword = PasswordUtil.encrypt(password, salt);
+        }
+        sysUser.setPassword(encryptPassword);
+
+        // TODO 设置默认头像
+
+        sysUser.setHead("http://localhost:8888/api/resource/201908201013068.png");
 
         // 保存系统用户
         return super.save(sysUser);
@@ -124,9 +141,17 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
     }
 
     @Override
-    public Paging<SysUserQueryVo> getSysUserPageList(SysUserQueryParam sysUserQueryParam) throws Exception {
-        Page page = setPageParam(sysUserQueryParam, OrderItem.desc("create_time"));
-        IPage<SysUserQueryVo> iPage = sysUserMapper.getSysUserPageList(page, sysUserQueryParam);
+    public Paging<SysUserQueryVo> getSysUserPageList(SysUserPageParam sysUserPageParam) throws Exception {
+        Page page = PageUtil.getPage(sysUserPageParam, OrderItem.desc(getLambdaColumn(SysUser::getCreateTime)));
+        IPage<SysUserQueryVo> iPage = sysUserMapper.getSysUserPageList(page, sysUserPageParam);
+
+        // 手机号码脱敏处理
+        if (iPage != null && CollectionUtils.isNotEmpty(iPage.getRecords())) {
+            iPage.getRecords().forEach(vo -> {
+                vo.setPhone(PhoneUtil.desensitize(vo.getPhone()));
+            });
+        }
+
         return new Paging(iPage);
     }
 
@@ -188,9 +213,11 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
         String encryptNewPassword = PasswordUtil.encrypt(newPassword, salt);
 
         // 修改密码
-        sysUser.setPassword(encryptNewPassword)
+        SysUser updateSysUser = new SysUser()
+                .setId(sysUser.getId())
+                .setPassword(encryptNewPassword)
                 .setUpdateTime(new Date());
-        return updateById(sysUser);
+        return updateById(updateSysUser);
     }
 
     @Override
@@ -199,5 +226,33 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserMapper, SysUser> 
                 .setId(id)
                 .setHead(headPath);
         return updateById(sysUser);
+    }
+
+    @Override
+    public boolean resetPassword(ResetPasswordParam resetPasswordParam) throws Exception {
+        String newPassword = resetPasswordParam.getNewPassword();
+        String confirmPassword = resetPasswordParam.getConfirmPassword();
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BusinessException("两次输入的密码不一致");
+        }
+        // 判断用户是否可修改
+        SysUser sysUser = getById(resetPasswordParam.getUserId());
+        if (sysUser == null) {
+            throw new BusinessException("用户不存在");
+        }
+        if (StateEnum.DISABLE.getCode().equals(sysUser.getState())) {
+            throw new BusinessException("用户已禁用");
+        }
+        // 密码加密处理
+        String salt = sysUser.getSalt();
+        // 新密码加密
+        String encryptNewPassword = PasswordUtil.encrypt(newPassword, salt);
+
+        // 修改密码
+        SysUser updateSysUser = new SysUser()
+                .setId(sysUser.getId())
+                .setPassword(encryptNewPassword)
+                .setUpdateTime(new Date());
+        return updateById(updateSysUser);
     }
 }

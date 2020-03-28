@@ -16,11 +16,11 @@
 
 package io.geekidea.springbootplus.system.controller;
 
-import io.geekidea.springbootplus.common.api.ApiResult;
-import io.geekidea.springbootplus.constant.CommonConstant;
-import io.geekidea.springbootplus.constant.CommonRedisKey;
-import io.geekidea.springbootplus.util.UUIDUtil;
-import io.geekidea.springbootplus.util.VerificationCode;
+import io.geekidea.springbootplus.framework.common.api.ApiResult;
+import io.geekidea.springbootplus.framework.constant.CommonConstant;
+import io.geekidea.springbootplus.framework.constant.CommonRedisKey;
+import io.geekidea.springbootplus.framework.util.UUIDUtil;
+import io.geekidea.springbootplus.framework.util.VerificationCode;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +64,7 @@ public class VerificationCodeController {
         VerificationCode verificationCode = new VerificationCode();
         BufferedImage image = verificationCode.getImage();
         String code = verificationCode.getText();
-        String verifyToken = UUIDUtil.getUUID();
+        String verifyToken = UUIDUtil.getUuid();
         // 缓存到Redis
         redisTemplate.opsForValue().set(String.format(CommonRedisKey.VERIFY_CODE, verifyToken), code, 5, TimeUnit.MINUTES);
         response.setHeader(CommonConstant.VERIFY_TOKEN, verifyToken);
@@ -91,7 +91,7 @@ public class VerificationCodeController {
         // 将图片转换成base64字符串
         String base64 = Base64.getEncoder().encodeToString(outputStream.toByteArray());
         // 生成当前验证码会话token
-        String verifyToken = UUIDUtil.getUUID();
+        String verifyToken = UUIDUtil.getUuid();
         Map<String, Object> map = new HashMap<>(2);
         map.put(CommonConstant.IMAGE, CommonConstant.BASE64_PREFIX + base64);
         map.put(CommonConstant.VERIFY_TOKEN, verifyToken);

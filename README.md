@@ -43,7 +43,7 @@
 - Integrated JWT,Shiro/Spring security permission control
 - Integrated Redis、spring cache、ehcache,etc
 - Integrated Rabbit/Rocket/Kafka MQ
-- Integration alibaba druid connection pool, JDBC performance and slow query detection
+- Integration HikariCP connection pool, A solid, high-performance, JDBC connection pool at last.
 - Integrated Spring Boot Admin, real-time detection of project operation
 - Integrate maven-assembly-plugin for different environment package deployment, including startup and restart commands, and extract configuration files to external config directory
 
@@ -96,7 +96,7 @@ cd spring-boot-plus
 ### Maven Build
 > Local environment is used by default, The configuration file：application-local.yml
 ```bash
-mvn clean package -Plocal
+mvn clean package -Pdev
 ```
 
 
@@ -182,7 +182,7 @@ public class SpringBootPlusGenerator {
         // Customize which files are generated automatically
         codeGenerator
                 .setGeneratorEntity(true)
-                .setGeneratorQueryParam(true)
+                .setGeneratorPageParam(true)
                 .setGeneratorQueryVo(true);
 
         // Generate business related codes
@@ -235,7 +235,7 @@ public class SpringBootPlusGenerator {
     ├── mapper
     │   └── FooBarMapper.java
     ├── param
-    │   └── FooBarQueryParam.java
+    │   └── FooBarPageParam.java
     ├── service
     │   ├── FooBarService.java
     │   └── impl
@@ -401,6 +401,12 @@ tail -f -n 1000 /root/spring-boot-plus-server/logs/spring-boot-plus.log
 - spring-boot-plus QQ Group
 
 ![spring-boot-plus QQ Group](https://spring-boot-plus.gitee.io/img/spring-boot-plus-qq-group.png)
+
+
+## Donate
+Ask the author to drink coffee and let the code fly for a while! 
+
+![geekidea-wechat-donate](https://geekidea.oss-cn-chengdu.aliyuncs.com/geekidea/geekidea-wechat-donate.jpeg)
 
 
 ## License

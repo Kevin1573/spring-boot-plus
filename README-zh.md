@@ -62,7 +62,7 @@ Spring Boot | 2.2.0.RELEASE | 最新发布稳定版 |
 Spring Framework | 5.2.0.RELEASE | 最新发布稳定版 |
 Mybatis | 3.5.2 | 持久层框架 |
 Mybatis Plus | 3.2.0 | mybatis增强框架 |
-Alibaba Druid | 1.1.20 | 数据源 |
+HikariCP | 3.4.1 | 数据源 |
 Fastjson | 1.2.62 | JSON处理工具集 |
 swagger2 | 2.6.1 | api文档生成工具 |
 commons-lang3 | 3.9 | 常用工具包 |
@@ -182,7 +182,7 @@ public class SpringBootPlusGenerator {
         // 当数据库字段更新时，可自定义自动生成哪些那文件
         codeGenerator
                 .setGeneratorEntity(true)
-                .setGeneratorQueryParam(true)
+                .setGeneratorPageParam(true)
                 .setGeneratorQueryVo(true);
 
         // 生成业务相关代码
@@ -236,7 +236,7 @@ public class SpringBootPlusGenerator {
     ├── mapper
     │   └── FooBarMapper.java
     ├── param
-    │   └── FooBarQueryParam.java
+    │   └── FooBarPageParam.java
     ├── service
     │   ├── FooBarService.java
     │   └── impl
@@ -400,6 +400,10 @@ tail -f -n 1000 /root/spring-boot-plus-server/logs/spring-boot-plus.log
 
 ![spring-boot-plus QQ Group](https://spring-boot-plus.gitee.io/img/spring-boot-plus-qq-group.png)
 
+## 赞赏
+请作者喝咖啡，让代码飞一会儿！
+                          
+![geekidea-wechat-donate](https://geekidea.oss-cn-chengdu.aliyuncs.com/geekidea/geekidea-wechat-donate.png)
 
 ## License
 spring-boot-plus is under the Apache 2.0 license. See the [LICENSE](https://github.com/geekidea/spring-boot-plus/blob/master/LICENSE) file for details.

@@ -20,13 +20,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.geekidea.springbootplus.common.service.impl.BaseServiceImpl;
-import io.geekidea.springbootplus.common.vo.Paging;
-import io.geekidea.springbootplus.enums.StateEnum;
+import io.geekidea.springbootplus.framework.pagination.PageUtil;
+import io.geekidea.springbootplus.framework.pagination.Paging;
+import io.geekidea.springbootplus.framework.common.service.impl.BaseServiceImpl;
+import io.geekidea.springbootplus.system.enums.StateEnum;
 import io.geekidea.springbootplus.system.convert.SysDepartmentConvert;
 import io.geekidea.springbootplus.system.entity.SysDepartment;
 import io.geekidea.springbootplus.system.mapper.SysDepartmentMapper;
-import io.geekidea.springbootplus.system.param.SysDepartmentQueryParam;
+import io.geekidea.springbootplus.system.param.SysDepartmentPageParam;
 import io.geekidea.springbootplus.system.service.SysDepartmentService;
 import io.geekidea.springbootplus.system.vo.SysDepartmentQueryVo;
 import io.geekidea.springbootplus.system.vo.SysDepartmentTreeVo;
@@ -81,9 +82,9 @@ public class SysDepartmentServiceImpl extends BaseServiceImpl<SysDepartmentMappe
     }
 
     @Override
-    public Paging<SysDepartmentQueryVo> getSysDepartmentPageList(SysDepartmentQueryParam sysDepartmentQueryParam) throws Exception {
-        Page page = setPageParam(sysDepartmentQueryParam, OrderItem.desc("create_time"));
-        IPage<SysDepartmentQueryVo> iPage = sysDepartmentMapper.getSysDepartmentPageList(page, sysDepartmentQueryParam);
+    public Paging<SysDepartmentQueryVo> getSysDepartmentPageList(SysDepartmentPageParam sysDepartmentPageParam) throws Exception {
+        Page page = PageUtil.getPage(sysDepartmentPageParam, OrderItem.desc(getLambdaColumn(SysDepartment::getCreateTime)));
+        IPage<SysDepartmentQueryVo> iPage = sysDepartmentMapper.getSysDepartmentPageList(page, sysDepartmentPageParam);
         return new Paging(iPage);
     }
 
@@ -104,7 +105,7 @@ public class SysDepartmentServiceImpl extends BaseServiceImpl<SysDepartmentMappe
     }
 
     @Override
-    public List<SysDepartmentTreeVo> getAllDepartmentTree() {
+    public List<SysDepartmentTreeVo> getDepartmentTree() {
         List<SysDepartment> sysDepartmentList = getAllDepartmentList();
         if (CollectionUtils.isEmpty(sysDepartmentList)) {
             throw new IllegalArgumentException("SysDepartment列表不能为空");

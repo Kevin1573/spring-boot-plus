@@ -16,12 +16,11 @@
 
 package io.geekidea.springbootplus.system.service;
 
-import io.geekidea.springbootplus.common.service.BaseService;
-import io.geekidea.springbootplus.common.vo.Paging;
+import io.geekidea.springbootplus.framework.common.service.BaseService;
+import io.geekidea.springbootplus.framework.pagination.Paging;
 import io.geekidea.springbootplus.system.entity.SysRole;
-import io.geekidea.springbootplus.system.param.SysRoleQueryParam;
-import io.geekidea.springbootplus.system.param.sysrole.AddSysRoleParam;
-import io.geekidea.springbootplus.system.param.sysrole.UpdateSysRoleParam;
+import io.geekidea.springbootplus.system.param.sysrole.SysRolePageParam;
+import io.geekidea.springbootplus.system.param.sysrole.UpdateSysRolePermissionParam;
 import io.geekidea.springbootplus.system.vo.SysRoleQueryVo;
 
 import java.io.Serializable;
@@ -43,7 +42,7 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @return
      * @throws Exception
      */
-    boolean saveSysRole(AddSysRoleParam addSysRoleParam) throws Exception;
+    boolean saveSysRole(SysRole sysRole) throws Exception;
 
     /**
      * 修改
@@ -52,7 +51,7 @@ public interface SysRoleService extends BaseService<SysRole> {
      * @return
      * @throws Exception
      */
-    boolean updateSysRole(UpdateSysRoleParam updateSysRoleParam) throws Exception;
+    boolean updateSysRole(SysRole sysRole) throws Exception;
 
     /**
      * 删除
@@ -75,11 +74,11 @@ public interface SysRoleService extends BaseService<SysRole> {
     /**
      * 获取分页对象
      *
-     * @param sysRoleQueryParam
+     * @param sysRolePageParam
      * @return
      * @throws Exception
      */
-    Paging<SysRoleQueryVo> getSysRolePageList(SysRoleQueryParam sysRoleQueryParam) throws Exception;
+    Paging<SysRole> getSysRolePageList(SysRolePageParam sysRolePageParam) throws Exception;
 
     /**
      * 根据id校验角色是否存在并且已启用
@@ -92,10 +91,19 @@ public interface SysRoleService extends BaseService<SysRole> {
 
     /**
      * 判断角色编码是否存在
+     *
      * @param code
      * @return
      * @throws Exception
      */
     boolean isExistsByCode(String code) throws Exception;
 
+    /**
+     * 修改系统角色权限配置
+     *
+     * @param param
+     * @return
+     * @throws Exception
+     */
+    boolean updateSysRolePermission(UpdateSysRolePermissionParam param) throws Exception;
 }

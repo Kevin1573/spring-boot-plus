@@ -35,13 +35,11 @@ public class SpringBootPlusGenerator {
                 .setDriverUrl("jdbc:mysql://localhost:3306/spring_boot_plus?useUnicode=true&characterEncoding=UTF-8&useSSL=false");
 
         // 包信息
-        codeGenerator
-                .setProjectPackagePath("io/geekidea/springbootplus")
-                .setParentPackage("io.geekidea.springbootplus");
+        codeGenerator.setParentPackage("com.example");
 
         // 组件作者等配置
         codeGenerator
-                .setModuleName("foobar")
+                .setModuleName("xxxx")
                 .setAuthor("geekidea")
                 .setPkIdColumnName("id");
 
@@ -51,11 +49,14 @@ public class SpringBootPlusGenerator {
                 .setPageListOrder(true)
                 .setParamValidation(true);
 
+        // 生成 baseResultMap
+        codeGenerator.setBaseResultMap(true);
+
         // 生成实体映射相关代码,可用于数据库字段更新
-        // 当数据库字段更新时，可自定义自动生成哪些那文件
+        // 当数据库字段更新时，可自定义自动生成哪些文件
         codeGenerator
                 .setGeneratorEntity(true)
-                .setGeneratorQueryParam(true)
+                .setGeneratorPageParam(true)
                 .setGeneratorQueryVo(true);
 
         // 生成业务相关代码
@@ -78,7 +79,7 @@ public class SpringBootPlusGenerator {
         // 需要生成的表数组
         // xxx,yyy,zzz为需要生成代码的表名称
         String[] tables = {
-                "foo_bar"
+                "SYS_PERMISSION"
         };
 
         // 循环生成

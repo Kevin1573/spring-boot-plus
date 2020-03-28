@@ -16,11 +16,10 @@
 
 package io.geekidea.springbootplus.resource.controller;
 
-import io.geekidea.springbootplus.common.api.ApiResult;
-import io.geekidea.springbootplus.common.param.IdParam;
-import io.geekidea.springbootplus.core.properties.SpringBootPlusProperties;
-import io.geekidea.springbootplus.system.vo.SysLogQueryVo;
-import io.geekidea.springbootplus.util.UploadUtil;
+import io.geekidea.springbootplus.framework.common.api.ApiResult;
+import io.geekidea.springbootplus.framework.common.param.IdParam;
+import io.geekidea.springbootplus.framework.core.properties.SpringBootPlusProperties;
+import io.geekidea.springbootplus.framework.util.UploadUtil;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -34,6 +33,7 @@ import java.time.format.DateTimeFormatter;
 
 /**
  * 上传控制器
+ *
  * @author geekidea
  * @date 2019/8/20
  * @since 1.2.1-RELEASE
@@ -46,48 +46,34 @@ public class UploadController {
     @Autowired
     private SpringBootPlusProperties springBootPlusProperties;
 
-    @GetMapping("/hello")
-    public ApiResult hello(){
-        log.info("hello...");
-        return ApiResult.ok();
-    }
-
-    /**
-     * 获取系统日志
-     */
-    @PostMapping("/info")
-    @ApiOperation(value = "获取SysLog对象详情",notes = "查看系统日志",response = SysLogQueryVo.class)
-    public ApiResult<SysLogQueryVo> getSysUser(@Valid @RequestBody IdParam idParam) throws Exception{
-        log.info("idParam = " + idParam);
-        return ApiResult.ok();
-    }
-
     /**
      * 上传单个文件
      */
-    @PostMapping("/")
-    @ApiOperation(value = "上传单个文件",notes = "上传单个文件",response = ApiResult.class)
-    public ApiResult<Boolean> upload(@RequestParam("img") MultipartFile multipartFile) throws Exception{
+    @PostMapping
+    @ApiOperation(value = "上传单个文件", notes = "上传单个文件", response = ApiResult.class)
+    public ApiResult<Boolean> upload(@RequestParam("file") MultipartFile multipartFile,
+                                     @RequestParam("type") String type) throws Exception {
         log.info("multipartFile = " + multipartFile);
         log.info("ContentType = " + multipartFile.getContentType());
         log.info("OriginalFilename = " + multipartFile.getOriginalFilename());
         log.info("Name = " + multipartFile.getName());
         log.info("Size = " + multipartFile.getSize());
+        log.info("type = " + type);
 
         // 上传文件，返回保存的文件名称
         String saveFileName = UploadUtil.upload(springBootPlusProperties.getUploadPath(), multipartFile, originalFilename -> {
             // 文件后缀
-            String fileExtension= FilenameUtils.getExtension(originalFilename);
+            String fileExtension = FilenameUtils.getExtension(originalFilename);
             // 这里可自定义文件名称，比如按照业务类型/文件格式/日期
             String dateString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmssS"));
-            String fileName = dateString + "." +fileExtension;
+            String fileName = dateString + "." + fileExtension;
             return fileName;
         });
 
         // 上传成功之后，返回访问路径，请根据实际情况设置
 
         String fileAccessPath = springBootPlusProperties.getResourceAccessUrl() + saveFileName;
-        log.info("fileAccessPath:{}",fileAccessPath);
+        log.info("fileAccessPath:{}", fileAccessPath);
 
         return ApiResult.ok(fileAccessPath);
     }

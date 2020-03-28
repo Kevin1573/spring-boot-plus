@@ -16,34 +16,34 @@
 
 package io.geekidea.springbootplus.system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import io.geekidea.springbootplus.common.exception.BusinessException;
-import io.geekidea.springbootplus.common.service.impl.BaseServiceImpl;
-import io.geekidea.springbootplus.common.vo.Paging;
-import io.geekidea.springbootplus.enums.MenuLevelEnum;
-import io.geekidea.springbootplus.enums.StateEnum;
+import io.geekidea.springbootplus.framework.common.exception.BusinessException;
+import io.geekidea.springbootplus.framework.common.service.impl.BaseServiceImpl;
+import io.geekidea.springbootplus.framework.pagination.PageUtil;
+import io.geekidea.springbootplus.framework.pagination.Paging;
 import io.geekidea.springbootplus.system.convert.SysPermissionConvert;
 import io.geekidea.springbootplus.system.entity.SysPermission;
+import io.geekidea.springbootplus.system.entity.SysRolePermission;
+import io.geekidea.springbootplus.system.enums.MenuLevelEnum;
+import io.geekidea.springbootplus.system.enums.StateEnum;
 import io.geekidea.springbootplus.system.mapper.SysPermissionMapper;
-import io.geekidea.springbootplus.system.param.SysPermissionQueryParam;
+import io.geekidea.springbootplus.system.param.SysPermissionPageParam;
 import io.geekidea.springbootplus.system.service.SysPermissionService;
 import io.geekidea.springbootplus.system.service.SysRolePermissionService;
 import io.geekidea.springbootplus.system.vo.SysPermissionQueryVo;
 import io.geekidea.springbootplus.system.vo.SysPermissionTreeVo;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -76,24 +76,11 @@ public class SysPermissionServiceImpl extends BaseServiceImpl<SysPermissionMappe
     @Override
     public boolean updateSysPermission(SysPermission sysPermission) throws Exception {
         // 获取权限
-        SysPermission updateSysPermission = getById(sysPermission.getId());
-        if (updateSysPermission == null) {
+        if (getById(sysPermission.getId()) == null) {
             throw new BusinessException("权限不存在");
         }
-
-        // 指定需改的字段
-        updateSysPermission.setParentId(sysPermission.getParentId())
-                .setLevel(sysPermission.getLevel())
-                .setName(sysPermission.getName())
-                .setState(sysPermission.getState())
-                .setCode(sysPermission.getCode())
-                .setIcon(sysPermission.getIcon())
-                .setRemark(sysPermission.getRemark())
-                .setSort(sysPermission.getSort())
-                .setType(sysPermission.getType())
-                .setUrl(sysPermission.getUrl())
-                .setUpdateTime(new Date());
-        return super.updateById(updateSysPermission);
+        sysPermission.setUpdateTime(new Date());
+        return super.updateById(sysPermission);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -112,17 +99,19 @@ public class SysPermissionServiceImpl extends BaseServiceImpl<SysPermissionMappe
     }
 
     @Override
-    public Paging<SysPermissionQueryVo> getSysPermissionPageList(SysPermissionQueryParam sysPermissionQueryParam) throws Exception {
-        Page page = setPageParam(sysPermissionQueryParam, OrderItem.desc("create_time"));
-        IPage<SysPermissionQueryVo> iPage = sysPermissionMapper.getSysPermissionPageList(page, sysPermissionQueryParam);
+    public Paging<SysPermissionQueryVo> getSysPermissionPageList(SysPermissionPageParam sysPermissionPageParam) throws Exception {
+        Page page = PageUtil.getPage(sysPermissionPageParam, OrderItem.desc(getLambdaColumn(SysPermission::getCreateTime)));
+        IPage<SysPermissionQueryVo> iPage = sysPermissionMapper.getSysPermissionPageList(page, sysPermissionPageParam);
         return new Paging(iPage);
     }
 
     @Override
     public boolean isExistsByPermissionIds(List<Long> permissionIds) {
-        QueryWrapper queryWrapper = new QueryWrapper();
-        queryWrapper.in("id", permissionIds);
-        return sysPermissionMapper.selectCount(queryWrapper).intValue() == permissionIds.size();
+        if (CollectionUtils.isEmpty(permissionIds)){
+            return false;
+        }
+        Wrapper wrapper = lambdaQuery().in(SysPermission::getId, permissionIds).getWrapper();
+        return sysPermissionMapper.selectCount(wrapper).intValue() == permissionIds.size();
     }
 
     @Override
@@ -160,6 +149,9 @@ public class SysPermissionServiceImpl extends BaseServiceImpl<SysPermissionMappe
                 for (SysPermission two : twoList) {
                     SysPermissionTreeVo twoVo = SysPermissionConvert.INSTANCE.permissionToTreeVo(two);
                     if (two.getParentId().equals(one.getId())) {
+                        if (oneVo.getChildren() == null){
+                            oneVo.setChildren(new ArrayList<>());
+                        }
                         oneVo.getChildren().add(twoVo);
                     }
                     List<SysPermission> threeList = map.get(MenuLevelEnum.THREE.getCode());
@@ -167,6 +159,9 @@ public class SysPermissionServiceImpl extends BaseServiceImpl<SysPermissionMappe
                         for (SysPermission three : threeList) {
                             if (three.getParentId().equals(two.getId())) {
                                 SysPermissionTreeVo threeVo = SysPermissionConvert.INSTANCE.permissionToTreeVo(three);
+                                if (twoVo.getChildren() == null){
+                                    twoVo.setChildren(new ArrayList<>());
+                                }
                                 twoVo.getChildren().add(threeVo);
                             }
                         }
@@ -194,5 +189,29 @@ public class SysPermissionServiceImpl extends BaseServiceImpl<SysPermissionMappe
         // 转换成树形菜单
         List<SysPermissionTreeVo> treeVos = convertSysPermissionTreeVoList(list);
         return treeVos;
+    }
+
+    @Override
+    public List<Long> getPermissionIdsByRoleId(Long roleId) throws Exception {
+
+        // 根据角色id获取该对应的所有三级权限ID
+
+        return null;
+    }
+
+
+    @Override
+    public List<SysPermissionTreeVo> getNavMenuTree() throws Exception {
+        List<Integer> levels = Arrays.asList(MenuLevelEnum.ONE.getCode(),MenuLevelEnum.TWO.getCode());
+        Wrapper wrapper = lambdaQuery()
+                .in(SysPermission::getLevel,levels)
+                .eq(SysPermission::getState,StateEnum.ENABLE.getCode())
+                .getWrapper();
+
+
+        List<SysPermission> list = sysPermissionMapper.selectList(wrapper);
+
+       return convertSysPermissionTreeVoList(list);
+
     }
 }

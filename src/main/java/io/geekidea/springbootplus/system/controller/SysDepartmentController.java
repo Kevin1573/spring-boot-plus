@@ -16,11 +16,11 @@
 
 package io.geekidea.springbootplus.system.controller;
 
-import io.geekidea.springbootplus.common.api.ApiResult;
-import io.geekidea.springbootplus.common.controller.BaseController;
-import io.geekidea.springbootplus.common.vo.Paging;
+import io.geekidea.springbootplus.framework.common.api.ApiResult;
+import io.geekidea.springbootplus.framework.common.controller.BaseController;
+import io.geekidea.springbootplus.framework.pagination.Paging;
 import io.geekidea.springbootplus.system.entity.SysDepartment;
-import io.geekidea.springbootplus.system.param.SysDepartmentQueryParam;
+import io.geekidea.springbootplus.system.param.SysDepartmentPageParam;
 import io.geekidea.springbootplus.system.service.SysDepartmentService;
 import io.geekidea.springbootplus.system.vo.SysDepartmentQueryVo;
 import io.geekidea.springbootplus.system.vo.SysDepartmentTreeVo;
@@ -29,9 +29,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -57,7 +57,7 @@ public class SysDepartmentController extends BaseController {
     @PostMapping("/add")
     @RequiresPermissions("sys:department:add")
     @ApiOperation(value = "添加SysDepartment对象", notes = "添加部门", response = ApiResult.class)
-    public ApiResult<Boolean> addSysDepartment(@Valid @RequestBody SysDepartment sysDepartment) throws Exception {
+    public ApiResult<Boolean> addSysDepartment(@Validated @RequestBody SysDepartment sysDepartment) throws Exception {
             boolean flag = sysDepartmentService.saveSysDepartment(sysDepartment);
             return ApiResult.result(flag);
     }
@@ -68,7 +68,7 @@ public class SysDepartmentController extends BaseController {
     @PostMapping("/update")
     @RequiresPermissions("sys:department:update")
     @ApiOperation(value = "修改SysDepartment对象", notes = "修改部门", response = ApiResult.class)
-    public ApiResult<Boolean> updateSysDepartment(@Valid @RequestBody SysDepartment sysDepartment) throws Exception {
+    public ApiResult<Boolean> updateSysDepartment(@Validated @RequestBody SysDepartment sysDepartment) throws Exception {
             boolean flag = sysDepartmentService.updateSysDepartment(sysDepartment);
             return ApiResult.result(flag);
     }
@@ -101,8 +101,8 @@ public class SysDepartmentController extends BaseController {
     @PostMapping("/getPageList")
     @RequiresPermissions("sys:department:page")
     @ApiOperation(value = "获取SysDepartment分页列表", notes = "部门分页列表", response = SysDepartmentQueryVo.class)
-    public ApiResult<Paging<SysDepartmentQueryVo>> getSysDepartmentPageList(@Valid @RequestBody SysDepartmentQueryParam sysDepartmentQueryParam) throws Exception {
-        Paging<SysDepartmentQueryVo> paging = sysDepartmentService.getSysDepartmentPageList(sysDepartmentQueryParam);
+    public ApiResult<Paging<SysDepartmentQueryVo>> getSysDepartmentPageList(@Validated @RequestBody SysDepartmentPageParam sysDepartmentPageParam) throws Exception {
+        Paging<SysDepartmentQueryVo> paging = sysDepartmentService.getSysDepartmentPageList(sysDepartmentPageParam);
         return ApiResult.ok(paging);
     }
 
@@ -110,9 +110,9 @@ public class SysDepartmentController extends BaseController {
      * 获取所有部门列表
      */
     @PostMapping("/getAllDepartmentList")
-//    @RequiresPermissions("sys:department:all:list")
+    @RequiresPermissions("sys:department:all:list")
     @ApiOperation(value = "获取所有部门的树形列表", notes = "获取所有部门的树形列表", response = SysDepartment.class)
-    public ApiResult<Paging<SysDepartment>> getAllDepartmentList() throws Exception {
+    public ApiResult<List<SysDepartment>> getAllDepartmentList() throws Exception {
         List<SysDepartment> list = sysDepartmentService.getAllDepartmentList();
         return ApiResult.ok(list);
     }
@@ -120,12 +120,23 @@ public class SysDepartmentController extends BaseController {
     /**
      * 获取所有部门的树形列表
      */
-    @PostMapping("/getAllDepartmentTree")
+    @PostMapping("/getDepartmentTree")
 //    @RequiresPermissions("sys:department:all:tree")
     @ApiOperation(value = "获取所有部门的树形列表", notes = "获取所有部门的树形列表", response = SysDepartmentTreeVo.class)
-    public ApiResult<Paging<SysDepartmentTreeVo>> getAllDepartmentTree() throws Exception {
-        List<SysDepartmentTreeVo> treeVos = sysDepartmentService.getAllDepartmentTree();
+    public ApiResult<Paging<SysDepartmentTreeVo>> getDepartmentTree() throws Exception {
+        List<SysDepartmentTreeVo> treeVos = sysDepartmentService.getDepartmentTree();
         return ApiResult.ok(treeVos);
+    }
+
+    /**
+     * 部门列表
+     */
+    @PostMapping("/getList")
+    @RequiresPermissions("sys:department:list")
+    @ApiOperation(value = "获取SysDepartment列表", notes = "部门列表", response = SysDepartment.class)
+    public ApiResult<List<SysDepartment>> getSysDepartmentList() throws Exception {
+        List<SysDepartment> list = sysDepartmentService.list();
+        return ApiResult.ok(list);
     }
 
 }

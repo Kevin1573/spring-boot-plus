@@ -20,12 +20,13 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.geekidea.springbootplus.system.entity.SysRolePermission;
-import io.geekidea.springbootplus.system.param.SysRolePermissionQueryParam;
+import io.geekidea.springbootplus.system.param.sysrole.SysRolePermissionPageParam;
 import io.geekidea.springbootplus.system.vo.SysRolePermissionQueryVo;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -51,10 +52,10 @@ public interface SysRolePermissionMapper extends BaseMapper<SysRolePermission> {
      * 获取分页对象
      *
      * @param page
-     * @param sysRolePermissionQueryParam
+     * @param sysRolePermissionPageParam
      * @return
      */
-    IPage<SysRolePermissionQueryVo> getSysRolePermissionPageList(@Param("page") Page page, @Param("param") SysRolePermissionQueryParam sysRolePermissionQueryParam);
+    IPage<SysRolePermissionQueryVo> getSysRolePermissionPageList(@Param("page") Page page, @Param("param") SysRolePermissionPageParam sysRolePermissionPageParam);
 
     /**
      * 根据角色id获取可用的权限编码
@@ -63,4 +64,11 @@ public interface SysRolePermissionMapper extends BaseMapper<SysRolePermission> {
      * @return
      */
     Set<String> getPermissionCodesByRoleId(@Param("roleId") Long roleId);
+
+    /**
+     * 根据角色id获取该对应的所有三级权限ID
+     * @param roleId
+     * @return
+     */
+    List<Long> getThreeLevelPermissionIdsByRoleId(@Param("roleId") Long roleId);
 }

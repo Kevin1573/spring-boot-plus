@@ -16,6 +16,7 @@
 
 package io.geekidea.springbootplus.test;
 
+import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.baomidou.mybatisplus.generator.AutoGenerator;
@@ -24,11 +25,12 @@ import com.baomidou.mybatisplus.generator.config.*;
 import com.baomidou.mybatisplus.generator.config.po.TableInfo;
 import com.baomidou.mybatisplus.generator.config.rules.DateType;
 import com.baomidou.mybatisplus.generator.config.rules.NamingStrategy;
-import io.geekidea.springbootplus.generator.config.SpringBootPlusMySqlQuery;
+import io.geekidea.springbootplus.framework.generator.config.SpringBootPlusMySqlQuery;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +45,11 @@ import java.util.Map;
 @Data
 @Accessors(chain = true)
 public class CodeGenerator {
+
+    /**
+     * 框架包
+     */
+    private static final String FRAMEWORK_PACKAGE = "io.geekidea.springbootplus.framework";
 
     /**
      * 用户名
@@ -144,7 +151,7 @@ public class CodeGenerator {
     /**
      * 是否生成查询参数
      */
-    private boolean generatorQueryParam;
+    private boolean generatorPageParam;
     /**
      * 是否生成查询VO
      */
@@ -177,9 +184,20 @@ public class CodeGenerator {
      */
     private String superServiceImpl;
     /**
-     * 查询参数父类
+     * 分页查询参数父类
      */
-    private String superQueryParam;
+    private String superPageParam;
+
+    /**
+     * 分页排序查询参数父类
+     */
+    private String superPageOrderParam;
+
+    /**
+     * 分页工具类路径
+     */
+    private String commonPageUtil;
+
     /**
      * 实体父类实体列表
      */
@@ -201,7 +219,7 @@ public class CodeGenerator {
     /**
      * 公共排序查询参数
      */
-    private String commonOrderQueryParam;
+    private String commonOrderPageParam;
     /**
      * 公共分页对象
      */
@@ -213,24 +231,35 @@ public class CodeGenerator {
     private boolean fileOverride;
 
     /**
+     * 是否生成baseResultMap
+     */
+    private boolean baseResultMap;
+
+    /**
      * 初始化变量
      */
     public void init() {
-        this.commonParentPackage = this.parentPackage + ".common";
+        this.commonParentPackage = FRAMEWORK_PACKAGE + ".common";
         // 父类包路径
         this.superEntity = this.commonParentPackage + ".entity.BaseEntity";
         this.superController = this.commonParentPackage + ".controller.BaseController";
         this.superService = this.commonParentPackage + ".service.BaseService";
         this.superServiceImpl = this.commonParentPackage + ".service.impl.BaseServiceImpl";
-        this.superQueryParam = this.commonParentPackage + ".param.QueryParam";
+        this.superPageParam = this.commonParentPackage + ".pagination.BasePageParam";
+        this.superPageOrderParam = FRAMEWORK_PACKAGE + ".pagination.BasePageOrderParam";
         this.superEntityCommonColumns = new String[]{};
 
         // 公共类包路径
         this.commonIdParam = this.commonParentPackage + ".param.IdParam";
         this.commonApiResult = this.commonParentPackage + ".api.ApiResult";
         this.commonOrderEnum = this.commonParentPackage + ".enums.OrderEnum";
-        this.commonOrderQueryParam = this.commonParentPackage + ".param.OrderQueryParam";
-        this.commonPaging = this.commonParentPackage + ".vo.Paging";
+        this.commonPaging = FRAMEWORK_PACKAGE + ".pagination.Paging";
+        this.commonPageUtil = FRAMEWORK_PACKAGE + ".pagination.PageUtil";
+
+        // 如果包路径为空，转换包名称路径
+        if (StringUtils.isNotBlank(parentPackage)) {
+            this.projectPackagePath = parentPackage.replaceAll("\\.", File.separator);
+        }
     }
 
     /**
@@ -247,21 +276,22 @@ public class CodeGenerator {
         gc.setAuthor(author);
         gc.setOpen(false);                  // 是否打开输出目录
         gc.setSwagger2(true);               // 启用swagger注解
-        gc.setIdType(IdType.ID_WORKER);     // 主键类型:ID_WORKER
+        gc.setIdType(IdType.AUTO);     // 主键类型:ID_WORKER
         gc.setServiceName("%sService");     // 自定义文件命名，注意 %s 会自动填充表实体属性！
         gc.setFileOverride(fileOverride);   // 是否覆盖已有文件
         gc.setDateType(DateType.ONLY_DATE); // 设置日期类型为Date
+        gc.setBaseResultMap(baseResultMap);
 
         mpg.setGlobalConfig(gc);
 
         // 数据源配置
         DataSourceConfig dsc = new DataSourceConfig();
         dsc.setUrl(driverUrl);
-        // dsc.setSchemaName("public");
         dsc.setDriverName(driverName);
         dsc.setUsername(userName);
         dsc.setPassword(password);
         // 设置自定义查询
+        // MySQL
         dsc.setDbQuery(new SpringBootPlusMySqlQuery());
 
         mpg.setDataSource(dsc);
@@ -286,12 +316,15 @@ public class CodeGenerator {
                 Map<String, Object> map = new HashMap<>();
                 map.put("customField", "Hello " + this.getConfig().getGlobalConfig().getAuthor());
                 // 查询参数包路径
-                String queryParamPackage = parentPackage + StringPool.DOT + pc.getModuleName() + ".param";
-                map.put("queryParamPackage", queryParamPackage);
+                String paramPackage = parentPackage + StringPool.DOT + pc.getModuleName() + ".param";
+                map.put("paramPackage", paramPackage);
                 // 查询参数类路径
-                map.put("queryParamPath", queryParamPackage + StringPool.DOT + pascalTableName + "QueryParam");
+                map.put("pageParamPath", paramPackage + StringPool.DOT + pascalTableName + "PageParam");
                 // 查询参数共公包路径
-                map.put("queryParamCommonPath", superQueryParam);
+                System.out.println("superPageParam = " + superPageParam);
+                map.put("superPageParamPath", superPageParam);
+                map.put("superPageOrderParamPath", superPageOrderParam);
+                map.put("commonPageUtilPath", commonPageUtil);
                 // 查询参数共公包路径
                 map.put("idParamPath", commonIdParam);
                 // 响应结果包路径
@@ -318,7 +351,7 @@ public class CodeGenerator {
                 // 分页列表查询是否排序
                 map.put("pageListOrder", pageListOrder);
                 // 导入排序查询参数类
-                map.put("orderQueryParamPath", commonOrderQueryParam);
+                map.put("orderPageParamPath", commonOrderPageParam);
                 // 代码生成策略
                 map.put("generatorStrategy", generatorStrategy);
                 // 代码Validation校验
@@ -344,12 +377,12 @@ public class CodeGenerator {
             });
         }
 
-        // 自定义queryParam模板
-        if (generatorQueryParam) {
-            focList.add(new FileOutConfig("/templates/queryParam.java.vm") {
+        // 自定义pageParam模板
+        if (generatorPageParam) {
+            focList.add(new FileOutConfig("/templates/pageParam.java.vm") {
                 @Override
                 public String outputFile(TableInfo tableInfo) {
-                    return projectPath + "/src/main/java/" + projectPackagePath + "/" + pc.getModuleName() + "/param/" + tableInfo.getEntityName() + "QueryParam" + StringPool.DOT_JAVA;
+                    return projectPath + "/src/main/java/" + projectPackagePath + "/" + pc.getModuleName() + "/param/" + tableInfo.getEntityName() + "PageParam" + StringPool.DOT_JAVA;
                 }
             });
         }
@@ -406,13 +439,9 @@ public class CodeGenerator {
         strategy.setInclude(tableName);
         strategy.setSuperEntityColumns(superEntityCommonColumns);
         strategy.setControllerMappingHyphenStyle(true);
-        /**
-         * 注意，根据实际情况，进行设置
-         * 当表名称的前缀和模块名称一样时，会去掉表的前缀
-         * 比如模块名称为user,表明为user_info,则生成的实体名称是Info.java,一定要注意
-         */
         //strategy.setTablePrefix(pc.getModuleName() + "_");
         mpg.setStrategy(strategy);
+
         mpg.execute();
     }
 
@@ -458,10 +487,5 @@ public class CodeGenerator {
         }
         return null;
     }
-
-    public static void main(String[] args) {
-        System.out.println(underlineToColon("sys_user"));
-    }
-
 
 }

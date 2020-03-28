@@ -16,12 +16,13 @@
 
 package io.geekidea.springbootplus.system.controller;
 
-import io.geekidea.springbootplus.common.api.ApiResult;
-import io.geekidea.springbootplus.common.controller.BaseController;
-import io.geekidea.springbootplus.common.vo.Paging;
+import io.geekidea.springbootplus.framework.common.api.ApiResult;
+import io.geekidea.springbootplus.framework.common.controller.BaseController;
+import io.geekidea.springbootplus.framework.pagination.Paging;
 import io.geekidea.springbootplus.system.entity.SysPermission;
-import io.geekidea.springbootplus.system.param.SysPermissionQueryParam;
+import io.geekidea.springbootplus.system.param.SysPermissionPageParam;
 import io.geekidea.springbootplus.system.service.SysPermissionService;
+import io.geekidea.springbootplus.system.service.SysRolePermissionService;
 import io.geekidea.springbootplus.system.vo.SysPermissionQueryVo;
 import io.geekidea.springbootplus.system.vo.SysPermissionTreeVo;
 import io.swagger.annotations.Api;
@@ -29,9 +30,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
 import java.util.List;
 
 /**
@@ -51,13 +52,16 @@ public class SysPermissionController extends BaseController {
     @Autowired
     private SysPermissionService sysPermissionService;
 
+    @Autowired
+    private SysRolePermissionService sysRolePermissionService;
+
     /**
      * 添加系统权限
      */
     @PostMapping("/add")
     @RequiresPermissions("sys:permission:add")
     @ApiOperation(value = "添加SysPermission对象", notes = "添加系统权限", response = ApiResult.class)
-    public ApiResult<Boolean> addSysPermission(@Valid @RequestBody SysPermission sysPermission) throws Exception {
+    public ApiResult<Boolean> addSysPermission(@Validated @RequestBody SysPermission sysPermission) throws Exception {
         boolean flag = sysPermissionService.saveSysPermission(sysPermission);
         return ApiResult.result(flag);
     }
@@ -68,7 +72,7 @@ public class SysPermissionController extends BaseController {
     @PostMapping("/update")
     @RequiresPermissions("sys:permission:update")
     @ApiOperation(value = "修改SysPermission对象", notes = "修改系统权限", response = ApiResult.class)
-    public ApiResult<Boolean> updateSysPermission(@Valid @RequestBody SysPermission sysPermission) throws Exception {
+    public ApiResult<Boolean> updateSysPermission(@Validated @RequestBody SysPermission sysPermission) throws Exception {
         boolean flag = sysPermissionService.updateSysPermission(sysPermission);
         return ApiResult.result(flag);
     }
@@ -101,8 +105,8 @@ public class SysPermissionController extends BaseController {
     @PostMapping("/getPageList")
     @RequiresPermissions("sys:permission:page")
     @ApiOperation(value = "获取SysPermission分页列表", notes = "系统权限分页列表", response = SysPermissionQueryVo.class)
-    public ApiResult<Paging<SysPermissionQueryVo>> getSysPermissionPageList(@Valid @RequestBody SysPermissionQueryParam sysPermissionQueryParam) throws Exception {
-        Paging<SysPermissionQueryVo> paging = sysPermissionService.getSysPermissionPageList(sysPermissionQueryParam);
+    public ApiResult<Paging<SysPermissionQueryVo>> getSysPermissionPageList(@Validated @RequestBody SysPermissionPageParam sysPermissionPageParam) throws Exception {
+        Paging<SysPermissionQueryVo> paging = sysPermissionService.getSysPermissionPageList(sysPermissionPageParam);
         return ApiResult.ok(paging);
     }
 
@@ -159,6 +163,30 @@ public class SysPermissionController extends BaseController {
     @ApiOperation(value = "根据用户id获取该用户所有权限编码", notes = "根据用户id获取该用户所有权限编码", response = ApiResult.class)
     public ApiResult<String> getPermissionCodesByUserId(@PathVariable("userId") Long userId) throws Exception {
         List<String> list = sysPermissionService.getPermissionCodesByUserId(userId);
+        return ApiResult.ok(list);
+    }
+
+    /**
+     * 根据角色id获取该对应的所有三级权限ID
+     */
+    @GetMapping("/getThreeLevelPermissionIdsByRoleId/{roleId}")
+    // TODO
+//    @RequiresPermissions("sys:permission:three-ids-by-role-id")
+    @ApiOperation(value = "根据角色id获取该对应的所有三级权限ID", response = ApiResult.class)
+    public ApiResult<Long> getPermissionIdsByRoleId(@PathVariable("roleId") Long roleId) throws Exception {
+        List<Long> list = sysRolePermissionService.getThreeLevelPermissionIdsByRoleId(roleId);
+        return ApiResult.ok(list);
+    }
+
+    /**
+     * 获取所有导航树形菜单(一级/二级菜单)
+     */
+    @PostMapping("/getNavMenuTree")
+    // TODO
+//    @RequiresPermissions("sys:permission:nav-menu")
+    @ApiOperation(value = "获取所有导航菜单(一级/二级菜单)", response = ApiResult.class)
+    public ApiResult<SysPermissionTreeVo> getNavMenuTree() throws Exception {
+        List<SysPermissionTreeVo> list = sysPermissionService.getNavMenuTree();
         return ApiResult.ok(list);
     }
 

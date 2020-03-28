@@ -16,9 +16,9 @@
 
 package io.geekidea.springbootplus.resource.controller;
 
-import io.geekidea.springbootplus.common.api.ApiResult;
-import io.geekidea.springbootplus.core.properties.SpringBootPlusProperties;
-import io.geekidea.springbootplus.util.DownloadUtil;
+import io.geekidea.springbootplus.framework.common.api.ApiResult;
+import io.geekidea.springbootplus.framework.core.properties.SpringBootPlusProperties;
+import io.geekidea.springbootplus.framework.util.DownloadUtil;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +55,6 @@ public class DownloadController {
         // 允许下载的文件后缀
         List<String> allowFileExtensions = springBootPlusProperties.getAllowDownloadFileExtensions();
         // 文件下载，使用默认下载处理器
-//        DownloadUtil.download(downloadDir,downloadFileName,allowFileExtensions,response);
         // 文件下载，使用自定义下载处理器
         DownloadUtil.download(downloadDir,downloadFileName,allowFileExtensions,response, (dir, fileName, file, fileExtension, contentType, length) -> {
             // 下载自定义处理，返回true：执行下载，false：取消下载
