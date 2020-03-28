@@ -17,9 +17,9 @@
 -- ----------------------------
 -- Create Database for spring_boot_plus
 -- ----------------------------
-create database if not exists spring_boot_plus character set utf8mb4 COLLATE utf8mb4_general_ci;
+create database if not exists app_boot_plus character set utf8mb4 COLLATE utf8mb4_general_ci;
 
-use spring_boot_plus;
+use app_boot_plus;
 
 -- ----------------------------
 -- Table structure for ip
